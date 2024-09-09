@@ -16,7 +16,7 @@ def execute_code():
     input_text = data.get('input', '')
     expected_output = data.get('expected_output', '')
     time_limit = data.get('time_limit', 2)
-
+    tolerance = data.get('tolerance', None)
     # コードファイルを作成
     code_filename = f"code.{language}"
     with open(code_filename, 'w') as f:
@@ -53,7 +53,19 @@ def execute_code():
 
         # コードの実行結果と期待される出力を比較
         #末尾の空白や改行は無視して比較
-        match = output.rstrip() == expected_output.rstrip()
+        if tolerance is not None:
+           #絶対誤差または相対誤差がtolerance以下であれば正解とする
+            try:
+                output = float(output)
+                expected_output = float(expected_output)
+                if abs(output - expected_output) <= tolerance or abs(output - expected_output) / expected_output <= tolerance:
+                    match = True
+                else:
+                    match = False
+            except ValueError:
+                match = output.rstrip() == expected_output.rstrip()
+        else:
+            match = output.rstrip() == expected_output.rstrip()
 
         return jsonify({
             'status': 'RE' if process.returncode != 0 else 'AC' if match else 'WA',
