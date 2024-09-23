@@ -3,20 +3,24 @@ import subprocess
 import time
 import os
 import shlex
-
+from logging import debug, info, warning, error, critical
 app = Flask(__name__)
+
+@app.after_request
+def after_request(response):
+    response.headers.add('Access-Control-Allow-Origin', '*')  # すべてのオリジンを許可
+    response.headers.add('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')  # 許可するHTTPメソッド
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type')  # 許可するヘッダー
+    return response
 @app.route('/', methods=['GET'])
 def index():
     return {'message': 'Hello, World!'}
-@app.route('/execute', methods=['GET'])
+@app.route('/execute', methods=['POST'])
 def execute_code():
     data = request.json
     code = data.get('code')
     language = data.get('language')
     input_text = data.get('input', '')
-    expected_output = data.get('expected_output', '')
-    time_limit = data.get('time_limit', 2)
-    tolerance = data.get('tolerance', None)
     # コードファイルを作成
     code_filename = f"code.{language}"
     with open(code_filename, 'w') as f:
@@ -39,44 +43,19 @@ def execute_code():
     try:
         # 入力を標準入力として渡す
         process = subprocess.Popen(shlex.split(command), stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        output, error = process.communicate(input=input_text.encode(), timeout=time_limit)
-
+        output, error = process.communicate(input=input_text.encode(), timeout=5)
+        exit_code = process.returncode
         end_time = time.time()
-        elapsed_time = end_time - start_time
-        elapsed_time_ms = int(elapsed_time * 1000)
-
-        if elapsed_time >= time_limit:
-            return jsonify({'status': 'TLE', 'output': '', 'elapsed_time': elapsed_time_ms})
+        elapsed_time = f"{(end_time - start_time):.3f}"
 
         output = output.decode().strip()
         error = error.decode().strip()
-
-        # コードの実行結果と期待される出力を比較
-        #末尾の空白や改行は無視して比較
-        if tolerance is not None:
-           #絶対誤差または相対誤差がtolerance以下であれば正解とする
-            try:
-                output = float(output)
-                expected_output = float(expected_output)
-                if abs(output - expected_output) <= tolerance or abs(output - expected_output) / expected_output <= tolerance:
-                    match = True
-                else:
-                    match = False
-            except ValueError:
-                match = output.rstrip() == expected_output.rstrip()
+        if error:
+            return jsonify({'status': 'RE', 'exit_code': exit_code, 'message': error, 'elapsed_time': elapsed_time}), 200
         else:
-            match = output.rstrip() == expected_output.rstrip()
-
-        return jsonify({
-            'status': 'RE' if process.returncode != 0 else 'AC' if match else 'WA',
-            'output': output,
-            'elapsed_time': elapsed_time_ms,
-        })
-
-    except subprocess.TimeoutExpired:
-        return jsonify({'status': 'time_limit_exceeded', 'output': '', 'match': False})
+            return jsonify({'status': 'OK', 'message': error, 'output': output, 'elapsed_time': elapsed_time}), 200
     except Exception as e:
-        return jsonify({'status': 'error', 'output': str(e), 'match': False})
+        return jsonify({'status': 'IE', 'message': str(e)}), 400
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
