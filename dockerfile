@@ -2,7 +2,7 @@
 FROM python:3.12-slim
 
 ENV DEBIAN_FRONTEND=noninteractive
-
+ENV SUPPRESS_WARNINGS=true
 # 必要なパッケージのインストール
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -28,7 +28,5 @@ RUN pip install poetry
 RUN poetry config virtualenvs.create false
 RUN poetry install --no-dev
 
-
-RUN pip install awslambdaric
 # アプリケーションの起動
 CMD ["python", "main.py"]
