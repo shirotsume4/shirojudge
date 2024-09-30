@@ -49,8 +49,8 @@ def execute_code():
         elapsed_time = f"{(end_time - start_time):.3f}"
 
         output = output.decode().strip()
-        error = error.decode().strip('\n')
-        error = error[1:]
+        error_lines = error.decode().strip().splitlines()
+        error = error_lines[1:]
         if error:
             return jsonify({'status': 'RE', 'exit_code': exit_code, 'message': error, 'elapsed_time': elapsed_time}), 200
         else:
