@@ -28,7 +28,7 @@ def execute_code():
 
     # 実行環境に応じたコマンドを設定
     commands = {
-        'cpp': f"g++ {code_filename} && ./a.out",
+        'cpp': f"g++ -O2 -std=c++17 {code_filename} -o main -I . && ./main",
         'java': f"javac {code_filename} && java Main",
         'pypy': f"pypy3 {code_filename}",
         'python': f"python {code_filename}"
@@ -42,7 +42,7 @@ def execute_code():
 
     try:
         # 入力を標準入力として渡す
-        process = subprocess.Popen(shlex.split(command), stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        process = subprocess.Popen(command, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         output, error = process.communicate(input=input_text.encode(), timeout=5)
         exit_code = process.returncode
         end_time = time.time()
@@ -50,7 +50,10 @@ def execute_code():
 
         output = output.decode().strip()
         error_lines = error.decode().strip().splitlines()
-        error = error_lines[1:]
+        if error_lines and error_lines[0][0] == 'W':
+            error = "\n".join(error_lines[1:])
+        else:
+            error = "\n".join(error_lines)
         if error:
             return jsonify({'status': 'RE', 'exit_code': exit_code, 'message': error, 'elapsed_time': elapsed_time}), 200
         else:
