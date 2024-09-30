@@ -28,7 +28,7 @@ def execute_code():
 
     # 実行環境に応じたコマンドを設定
     commands = {
-        'cpp': f"g++ {code_filename} -o code && ./code",
+        'cpp': f"g++ {code_filename} && ./a.out",
         'java': f"javac {code_filename} && java Main",
         'pypy': f"pypy3 {code_filename}",
         'python': f"python {code_filename}"
@@ -46,7 +46,7 @@ def execute_code():
         output, error = process.communicate(input=input_text.encode(), timeout=5)
         exit_code = process.returncode
         end_time = time.time()
-        elapsed_time = f"{(end_time - start_time):.3f}"
+        elapsed_time = f"{(end_time - start_time):.2f}"
 
         output = output.decode().strip()
         error_lines = error.decode().strip().splitlines()
