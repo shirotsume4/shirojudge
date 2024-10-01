@@ -14,7 +14,8 @@ RUN apt-get update && \
     wget \
     bzip2 &&\
     apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/* && \
+    rm -rf /usr/include/x86_64-linux-gnu/c++/12/bits
 
 
 # 作業ディレクトリの設定

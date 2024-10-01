@@ -28,7 +28,7 @@ def execute_code():
 
     # 実行環境に応じたコマンドを設定
     commands = {
-        'cpp': f"g++ -O2 -std=c++17 {code_filename} -o main -I . && ./main",
+        'cpp': f"g++ -O2 -std=c++17 -H {code_filename} -o main -I . && ./main",
         'java': f"javac {code_filename} && java Main",
         'pypy': f"pypy3 {code_filename}",
         'python': f"python {code_filename}"
@@ -49,12 +49,8 @@ def execute_code():
         elapsed_time = f"{(end_time - start_time):.2f}"
 
         output = output.decode().strip()
-        error_lines = error.decode().strip().splitlines()
-        if error_lines and error_lines[0][0] == 'W':
-            error = "\n".join(error_lines[1:])
-        else:
-            error = "\n".join(error_lines)
-        if error:
+        error = error.decode().strip().splitlines()
+        if exit_code != 0:
             return jsonify({'status': 'RE', 'exit_code': exit_code, 'message': error, 'elapsed_time': elapsed_time}), 200
         else:
             return jsonify({'status': 'OK', 'message': error, 'output': output, 'elapsed_time': elapsed_time}), 200
