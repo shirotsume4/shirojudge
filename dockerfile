@@ -3,7 +3,6 @@ FROM python:3.12-slim
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV SUPPRESS_WARNINGS=true
-
 # 必要なパッケージのインストール
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -15,24 +14,20 @@ RUN apt-get update && \
     wget \
     bzip2 && \
     apt-get clean && \
-    rm -rf /var/lib/apt/lists/* 
+    rm -rf /var/lib/apt/lists/* && \
+    rm -rf /usr/include/x86_64-linux-gnu/c++/12/bits
 
-# bits/stdc++.hをプリコンパイル
-RUN mkdir -p /usr/local/include/bits && \
-    echo '#include <bits/stdc++.h>' > temp.cpp && \
-    g++ -std=c++17 -x c++-header temp.cpp -o /usr/local/include/bits/stdc++.gch && \
-    rm temp.cpp
 
 # 作業ディレクトリの設定
 WORKDIR /app
+COPY --from=build /app /app
 
-# アプリケーションコードをコピー
-COPY . /app
+# オプション：uvを実行時に使用したい場合はインストール
+RUN . /app/.venv/bin/activate && \
+    pip install uv
 
-# 依存ライブラリのインストール poetry
-RUN pip install poetry
-RUN poetry config virtualenvs.create false
-RUN poetry install --no-dev
+# アプリケーションポートの公開
+EXPOSE 8080
 
-# アプリケーションの起動
-CMD ["python", "main.py"]
+# アプリケーションをPythonで実行
+CMD ["/app/.venv/bin/python", "main.py"]
