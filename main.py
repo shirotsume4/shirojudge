@@ -28,7 +28,7 @@ def execute_code():
 
     # 実行環境に応じたコマンドを設定
     commands = {
-        'cpp': f"g++ -O2 -std=c++17 -H {code_filename} -o main -I . && ./main",
+        'cpp': f"g++ -O2 -std=c++17 -I /usr/local/include -o main {code_filename} && ./main",
         'java': f"javac {code_filename} && java Main",
         'pypy': f"pypy3 {code_filename}",
         'python': f"python {code_filename}"

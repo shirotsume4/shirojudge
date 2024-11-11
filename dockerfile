@@ -20,7 +20,7 @@ RUN apt-get update && \
 # bits/stdc++.hをプリコンパイル
 RUN mkdir -p /usr/local/include/bits && \
     echo '#include <bits/stdc++.h>' > temp.cpp && \
-    g++ -std=c++17 -x c++-header temp.cpp -o /usr/local/include/bits/stdc++.gch && \
+    g++ -std=c++17 -O2 -x c++-header temp.cpp -o /usr/local/include/bits/stdc++.gch && \
     rm temp.cpp
 
 # 作業ディレクトリの設定
