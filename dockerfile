@@ -35,8 +35,7 @@ WORKDIR /app
 COPY . /app
 
 # キャッシュを使いながら仮想環境を作成し、依存関係を同期
-RUN --mount=type=cache,target=/root/.cache \
-    uv venv /app/.venv && \
+RUN uv venv /app/.venv && \
     set -ex && \
     cd /app && \
     uv sync --frozen --no-install-project
