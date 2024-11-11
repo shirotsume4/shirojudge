@@ -7,14 +7,15 @@ ARG PYTHON_SHORT_VERSION="3.12"
 # uvの公式Dockerイメージを利用
 FROM ghcr.io/astral-sh/uv:python${PYTHON_SHORT_VERSION}-bookworm-slim AS build
 
+# 環境変数の設定
 ENV UV_LINK_MODE=copy \
     UV_COMPILE_BYTECODE=1 \
     UV_PYTHON_DOWNLOADS=never \
-    UV_PYTHON=python${PYTHON_VERSION%.*} \
+    UV_PYTHON=python${PYTHON_SHORT_VERSION} \
     DEBIAN_FRONTEND=noninteractive \
     SUPPRESS_WARNINGS=true
 
-# Install dependencies and clean up
+# 必要なパッケージのインストール
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     apt-transport-https \
@@ -27,30 +28,34 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /usr/include/x86_64-linux-gnu/c++/12/bits
 
-# Set working directory
+# 作業ディレクトリの設定
 WORKDIR /app
 
-# Copy application code
+# アプリケーションコードのコピー
 COPY . /app
 
-# Create a virtual environment and sync dependencies using uv with cache
+# キャッシュを使いながら仮想環境を作成し、依存関係を同期
 RUN --mount=type=cache,target=/root/.cache \
     uv venv /app/.venv && \
     set -ex && \
     cd /app && \
     uv sync --frozen --no-install-project
 
-# Start the final stage using Python slim image
+# Pythonのslimイメージで最終ステージの設定
 FROM python:${PYTHON_VERSION}-slim-bookworm
 
 ENV PATH=/app/.venv/bin:$PATH
 
-# Set working directory and copy files from the build stage
+# 作業ディレクトリの設定およびファイルのコピー
 WORKDIR /app
 COPY --from=build /app /app
 
-# Expose the application port
+# オプション：uvを実行時に使用したい場合はインストール
+RUN . /app/.venv/bin/activate && \
+    pip install uv
+
+# アプリケーションポートの公開
 EXPOSE 8080
 
-# Set the command to run the application
+# アプリケーションをPythonで実行
 CMD ["/app/.venv/bin/python", "main.py"]
