@@ -1,9 +1,16 @@
-# Pythonのベースイメージを使用
-FROM python:3.12-slim
+ARG PYTHON_VERSION="3.12.5"
 
-ENV DEBIAN_FRONTEND=noninteractive
-ENV SUPPRESS_WARNINGS=true
-# 必要なパッケージのインストール
+# Use uv's official Docker image for the build stage
+FROM ghcr.io/astral-sh/uv:python${PYTHON_VERSION%.*}-bookworm-slim AS build
+
+ENV UV_LINK_MODE=copy \
+    UV_COMPILE_BYTECODE=1 \
+    UV_PYTHON_DOWNLOADS=never \
+    UV_PYTHON=python${PYTHON_VERSION%.*} \
+    DEBIAN_FRONTEND=noninteractive \
+    SUPPRESS_WARNINGS=true
+
+# Install dependencies and clean up
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     apt-transport-https \
@@ -12,22 +19,34 @@ RUN apt-get update && \
     default-jdk \
     pypy3 \
     wget \
-    bzip2 &&\
+    bzip2 && \
     apt-get clean && \
-    rm -rf /var/lib/apt/lists/* && \
-    rm -rf /usr/include/x86_64-linux-gnu/c++/12/bits
+    rm -rf /var/lib/apt/lists/* /usr/include/x86_64-linux-gnu/c++/12/bits
 
-
-# 作業ディレクトリの設定
+# Set working directory
 WORKDIR /app
 
-# アプリケーションコードをコピー
+# Copy application code
 COPY . /app
 
-# 依存ライブラリのインストール poetry
-RUN pip install poetry
-RUN poetry config virtualenvs.create false
-RUN poetry install --no-dev
+# Create a virtual environment and sync dependencies using uv with cache
+RUN --mount=type=cache,target=/root/.cache \
+    uv venv /app/.venv && \
+    set -ex && \
+    cd /app && \
+    uv sync --frozen --no-install-project
 
-# アプリケーションの起動
-CMD ["python", "main.py"]
+# Start the final stage using Python slim image
+FROM python:${PYTHON_VERSION}-slim-bookworm
+
+ENV PATH=/app/.venv/bin:$PATH
+
+# Set working directory and copy files from the build stage
+WORKDIR /app
+COPY --from=build /app /app
+
+# Expose the application port
+EXPOSE 8080
+
+# Set the command to run the application
+CMD ["/app/.venv/bin/python", "main.py"]
