@@ -1,7 +1,11 @@
+# Pythonのバージョンを指定
 ARG PYTHON_VERSION="3.12.5"
 
-# Use uv's official Docker image for the build stage
-FROM ghcr.io/astral-sh/uv:python${PYTHON_VERSION%.*}-bookworm-slim AS build
+# バージョン番号から短縮バージョンを設定（例えば "3.12"）
+ARG PYTHON_SHORT_VERSION="3.12"
+
+# uvの公式Dockerイメージを利用
+FROM ghcr.io/astral-sh/uv:python${PYTHON_SHORT_VERSION}-bookworm-slim AS build
 
 ENV UV_LINK_MODE=copy \
     UV_COMPILE_BYTECODE=1 \
