@@ -3,6 +3,7 @@ FROM python:3.12-slim
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV SUPPRESS_WARNINGS=true
+
 # 必要なパッケージのインストール
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -12,11 +13,15 @@ RUN apt-get update && \
     default-jdk \
     pypy3 \
     wget \
-    bzip2 &&\
+    bzip2 && \
     apt-get clean && \
-    rm -rf /var/lib/apt/lists/* && \
-    rm -rf /usr/include/x86_64-linux-gnu/c++/12/bits
+    rm -rf /var/lib/apt/lists/* 
 
+# bits/stdc++.hをプリコンパイル
+RUN mkdir -p /usr/local/include/bits && \
+    echo '#include <bits/stdc++.h>' > temp.cpp && \
+    g++ -std=c++17 -x c++-header temp.cpp -o /usr/local/include/bits/stdc++.gch && \
+    rm temp.cpp
 
 # 作業ディレクトリの設定
 WORKDIR /app
