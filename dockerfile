@@ -15,19 +15,6 @@ ENV UV_LINK_MODE=copy \
     DEBIAN_FRONTEND=noninteractive \
     SUPPRESS_WARNINGS=true
 
-# 必要なパッケージのインストール
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    apt-transport-https \
-    ca-certificates \
-    g++ \
-    default-jdk \
-    pypy3 \
-    wget \
-    bzip2 && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/* /usr/include/x86_64-linux-gnu/c++/12/bits
-
 # 作業ディレクトリの設定
 WORKDIR /app
 
@@ -44,6 +31,20 @@ RUN uv venv /app/.venv && \
 FROM python:${PYTHON_VERSION}-slim-bookworm
 
 ENV PATH=/app/.venv/bin:$PATH
+
+
+# 必要なパッケージのインストール
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    apt-transport-https \
+    ca-certificates \
+    g++ \
+    default-jdk \
+    pypy3 \
+    wget \
+    bzip2 && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /usr/include/x86_64-linux-gnu/c++/12/bits
 
 # 作業ディレクトリの設定およびファイルのコピー
 WORKDIR /app
