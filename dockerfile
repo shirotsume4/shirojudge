@@ -54,22 +54,10 @@ WORKDIR /app
 # アプリケーションコードをコピー
 COPY . /app
 
-# 共通の仮想環境を作成し、poetryでパッケージをインストール
-RUN apt-get update && apt-get install -y python3-pip python3-venv gfortran && \
-    python3 -m venv /shared_env && \
-    . /shared_env/bin/activate && \
-    pip install --upgrade pip && \
-    pip install poetry && \
-    poetry config virtualenvs.in-project true && \
-    poetry install --no-dev
-
-# 環境変数を設定して、共通仮想環境のパスを指定
-ENV PYTHONPATH=/shared_env/lib/python3.11/site-packages
-
-# pythonとpypy3コマンドが共通の仮想環境を使うようにシンボリックリンクを設定
-RUN rm -f /usr/bin/python /usr/bin/pypy3 && \
-    ln -s /shared_env/bin/python3 /usr/bin/python && \
-    ln -s /shared_env/bin/pypy3 /usr/bin/pypy3
+# 依存ライブラリのインストール poetry
+RUN pip install poetry
+RUN poetry config virtualenvs.create false
+RUN poetry install --no-dev
 
 # アプリケーションの起動
 CMD ["python", "main.py"]
