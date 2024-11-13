@@ -30,8 +30,8 @@ def execute_code():
     commands = {
         'cpp': f"g++ -O2 -std=c++17 -I /usr/local/include -o main {code_filename} && ./main",
         'java': f"javac {code_filename} && java Main",
-        'pypy': f"/usr/bin/pypy3 {code_filename}",
-        'python': f"/usr/bin/python {code_filename}"
+        'pypy': f"pypy3 {code_filename}",
+        'python': f"python {code_filename}"
     }
 
     if language not in commands:
