@@ -34,10 +34,19 @@ RUN mkdir -p /usr/local/include/bits && \
 RUN git clone https://github.com/atcoder/ac-library.git /ac-library && \
     cp -r /ac-library/atcoder /usr/local/include/
 
-# AC Libraryのヘッダーファイルをプリコンパイル
+# AC Libraryのヘッダーファイルをコピー
 RUN mkdir -p /usr/local/include/atcoder && \
-cp -r /ac-library/atcoder/* /usr/local/include/atcoder && \
-g++ -std=c++17 -O2 -x c++-header /usr/local/include/atcoder/* -o /usr/local/include/atcoder/headers.gch
+    cp -r /ac-library/atcoder/* /usr/local/include/atcoder
+
+# 個別にプリコンパイル
+RUN find /usr/local/include/atcoder -name '*.h' -exec g++ -std=c++17 -O2 -x c++-header {} -o {}.gch \;
+
+# ヘッダーファイルを1つにまとめる
+RUN find /usr/local/include/atcoder -name '*.h' -exec cat {} \; > /usr/local/include/atcoder/all.h
+
+# まとめたファイルをプリコンパイル
+RUN g++ -std=c++17 -O2 -x c++-header /usr/local/include/atcoder/all.h -o /usr/local/include/atcoder/all.h.gch
+
 
 # 作業ディレクトリの設定
 WORKDIR /app
